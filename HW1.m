@@ -14,9 +14,7 @@
 clear all; close all; clc;
 
 % User-entered parameters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-pathName = strcat('E:\desktop_files\01Chris_Desktop\OSU\' ,...
-    'CE661_Kinematic_Positioning_and_Navigation\' ,...
-    'KPN - Winter 2018\Homework\HW1\');
+pathName = strcat('./');
 
 csvFname = '180108_202208.csv';  
 
