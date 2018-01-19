@@ -1,0 +1,116 @@
+                              ***IGS 08***
+                CORVALLIS (CORV),  OREGON
+
+ Created on 31Aug2011 at 09:30:48.
+ _____________________________________________________________________________ 
+|                                                                             |
+|         Antenna Reference Point(ARP): CORVALLIS CORS ARP                    |
+|         ------------------------------------------------                    |
+|                             PID = AH2486                                    |
+|                                                                             |
+|                                                                             |
+| IGS08 POSITION (EPOCH 2005.0)                                               |
+| Computed in Aug 2011 using data through gpswk 1631.                         |
+|     X =  -2498423.869 m     latitude    =  44 35 07.92757 N                 |
+|     Y =  -3802820.840 m     longitude   = 123 18 16.57544 W                 |
+|     Z =   4454737.819 m     ellipsoid height =  107.129   m                 |
+|                                                                             |
+| IGS08 VELOCITY                                                              |
+| Computed in Aug 2011 using data through gpswk 1631.                         |
+|     VX =  -0.0100 m/yr      northward =  -0.0053 m/yr                       |
+|     VY =   0.0017 m/yr      eastward  =  -0.0093 m/yr                       |
+|     VZ =  -0.0035 m/yr      upward    =   0.0004 m/yr                       |
+|                                                                             |
+|                                                                             |
+| NAD_83 (2011) POSITION (EPOCH 2010.0)                                       |
+| Transformed from IGS08 (epoch 2005.0) position in Aug 2011.                 |
+|     X =  -2498423.109 m     latitude    =  44 35 07.91298 N                 |
+|     Y =  -3802822.034 m     longitude   = 123 18 16.51693 W                 |
+|     Z =   4454737.758 m     ellipsoid height =  107.499   m                 |
+|                                                                             |
+| NAD_83 (2011) VELOCITY                                                      |
+| Transformed from IGS08 velocity in Aug 2011.                                |
+|     VX =   0.0084 m/yr      northward =   0.0082 m/yr                       |
+|     VY =   0.0023 m/yr      eastward  =   0.0058 m/yr                       |
+|     VZ =   0.0051 m/yr      upward    =  -0.0011 m/yr                       |
+|_____________________________________________________________________________|
+|                                                                             |
+| L1 Phase Center of the current GPS antenna: CORVALLIS CORS L1 PC C          |
+| ------------------------------------------------------------------          |
+| The Rev:E, D/M, chokerings, 700936.02 SCIGN antenna                         |
+| (Antenna Code = ASH700936E_C    NONE) was installed on 01Mar1999.           |
+|        The L2 phase center is 0.028 m above the L1 phase center.            |
+|                             PID = DH8008                                    |
+|                                                                             |
+|                                                                             |
+| IGS08 POSITION (EPOCH 2005.0)                                               |
+| Computed in Aug 2011 using data through gpswk 1631.                         |
+|     X =  -2498423.905 m     latitude    =  44 35 07.92759 N                 |
+|     Y =  -3802820.894 m     longitude   = 123 18 16.57545 W                 |
+|     Z =   4454737.884 m     ellipsoid height =  107.221   m                 |
+|                                                                             |
+| The IGS08 VELOCITY of the L1 PC is the same as that for the ARP.            |
+|                                                                             |
+|                                                                             |
+| NAD_83 (2011) POSITION (EPOCH 2010.0)                                       |
+| Transformed from IGS08 (epoch 2005.0) position in Aug 2011.                 |
+|     X =  -2498423.145 m     latitude    =  44 35 07.91300 N                 |
+|     Y =  -3802822.088 m     longitude   = 123 18 16.51695 W                 |
+|     Z =   4454737.823 m     ellipsoid height =  107.591   m                 |
+|                                                                             |
+| The NAD_83 (2011) VELOCITY of the L1 PC is the same as that for the ARP.    |
+|_____________________________________________________________________________|
+|                                                                             |
+|         Monument: CORVALLIS CORS MONUMENT                                   |
+|         ---------------------------------                                   |
+|                             PID = AH2488                                    |
+|         Inscribed: NONE                                                     |
+|                                                                             |
+|                                                                             |
+| IGS08 POSITION (EPOCH 2005.0)                                               |
+| Computed in Aug 2011 using data through gpswk 1631.                         |
+|     X =  -2498423.274 m     latitude    =  44 35 07.92757 N                 |
+|     Y =  -3802819.935 m     longitude   = 123 18 16.57544 W                 |
+|     Z =   4454736.752 m     ellipsoid height =  105.608   m                 |
+|                                                                             |
+| The IGS08 VELOCITY of the monument is the same as that for the ARP.         |
+|                                                                             |
+|                                                                             |
+| NAD_83 (2011) POSITION (EPOCH 2010.0)                                       |
+| Transformed from IGS08 (epoch 2005.0) position in Aug 2011.                 |
+|     X =  -2498422.514 m     latitude    =  44 35 07.91298 N                 |
+|     Y =  -3802821.128 m     longitude   = 123 18 16.51693 W                 |
+|     Z =   4454736.691 m     ellipsoid height =  105.978   m                 |
+|                                                                             |
+| The NAD_83 (2011) VELOCITY of the monument is the same as that for the ARP. |
+|_____________________________________________________________________________|
+
+
+ * Latitude, longitude and ellipsoid height are computed from their
+   corresponding cartesian coordinates using dimensions for the
+   GRS 80 ellipsoid: semi-major axis = 6,378,137.0 meters
+                          flattening = 1/298.257222101...
+
+
+ * WARNING: Mixing of antenna types can lead to errors of up to 10 cm.
+   in height unless antenna-phase-center variation and antenna-phase-center
+   offset are properly modeled.  See next comment.
+
+ * The coordinates shown on this page were computed using absolute antenna
+   calibrations.  CORS coordinates began using absolute antenna calibrations
+   beginning with IGS08 and NAD 83 (2011, MA11, PA11).  For additional
+   information on the derivation of these positions and velocities and
+   antenna calibrations consult:
+   http://geodesy.noaa.gov/CORS/coords.shtml
+   http://geodesy.noaa.gov/ANTCAL
+
+
+ * For more site specific information on the equipment history and
+   monumentation type consult:
+   ftp://geodesy.noaa.gov/cors/station_log/corv.log.txt
+   http://geodesy.noaa.gov/cgi-cors/corsage_2.prl?site=corv
+
+
+ * The NAD_83 position & velocity were revised in Mar. 2002.
+ * The ITRF00 & NAD83 positions & velocities were revised in Aug. 2007.
+ * The position & velocity were revised in Aug 2011.
