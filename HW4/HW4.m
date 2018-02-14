@@ -47,3 +47,5 @@ else
 end
 
 f_signal = 1.023 * 1000 * 1000; %1.023 Mhz frequency
+
+tDiff = lagDiff/f_signal;
