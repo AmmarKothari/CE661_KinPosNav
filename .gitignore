@@ -1,3 +1,17 @@
 *~
 ~*
 HW5/dataset/
+HW5/depthmaps
+HW5/exif
+HW5/features
+HW5/images
+HW5/matches
+HW5/profile.log
+HW5/reconstruction.json
+HW5/reconstruction.meshed.json
+HW5/reference_lla.json
+HW5/reports
+HW5/tracks.csv
+HW5/undistorted
+HW5/undistorted_reconstruction.json
+HW5/undistorted_tracks.csv
