@@ -11,12 +11,10 @@
 %
 % C. Parrish, 11/24/2015
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear all; close all; clc;
+clear all; clf(gcf()); clc;
 
 % Editable filenames %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-velFile = strcat('E:\desktop_files\01Chris_Desktop\OSU\', ...
-    'Kinematic Positioning and Navigation Class\' ,...
-    'Homework Exercises\HW6\noisy_ngs_vert_vel.mat');
+velFile = strcat('noisy_ngs_vert_vel.mat');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 load(velFile);    % Contains the noisy samples of vertical velocity
@@ -24,13 +22,20 @@ load(velFile);    % Contains the noisy samples of vertical velocity
 tIndx = 2:2:length(vel_samples)*2;   % Sample interval is 2 sec
 
 % Now apply the Kalman filter
+Phi = [1, 2; 0, 1];
+Q = [0.5, 0; 0, 0.0];
+H = [0, 1];
+R = 01;
+KF = kalman_traj(Phi, Q, H, R);
+KF = KF.setInitialValues([0;0], [0,0;0,0]);
 for i =1:length(vel_samples)
     xSample = vel_samples(i);
     
     % Note: in the line of code below, you should replace the call to
     % "kalman_traj_hw5) with a call to the Kalman filter function you write
     % for this HW
-    [x_kalman, cov, Kalman_gain] = kalman_traj_hw5(xSample);
+%     [x_kalman, cov, Kalman_gain] = kalman_traj(xSample);
+    [KF, x_kalman, cov, Kalman_gain] = KF.update(xSample);
     
     filtered_h_el(i) = x_kalman(1);
     filtered_vel(i) = x_kalman(2);
