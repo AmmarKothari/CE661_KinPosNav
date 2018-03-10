@@ -19,42 +19,57 @@ velFile = strcat('noisy_ngs_vert_vel.mat');
 
 load(velFile);    % Contains the noisy samples of vertical velocity
 
-tIndx = 2:2:length(vel_samples)*2;   % Sample interval is 2 sec
 
-% Now apply the Kalman filter
-Phi = [1, 2; 0, 1];
-Q = [0.5, 0; 0, 0.0];
-H = [0, 1];
-R = 01;
-KF = kalman_traj(Phi, Q, H, R);
-KF = KF.setInitialValues([0;0], [0,0;0,0]);
-for i =1:length(vel_samples)
-    xSample = vel_samples(i);
-    
-    % Note: in the line of code below, you should replace the call to
-    % "kalman_traj_hw5) with a call to the Kalman filter function you write
-    % for this HW
-%     [x_kalman, cov, Kalman_gain] = kalman_traj(xSample);
-    [KF, x_kalman, cov, Kalman_gain] = KF.update(xSample);
-    
-    filtered_h_el(i) = x_kalman(1);
-    filtered_vel(i) = x_kalman(2);
-    Kg(i,:) = Kalman_gain;
-    P_norm(i) = norm(cov);
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+N = 8;
+fig_fn = cell(N,1);
+Q = cell(N,1);
+R = cell(N,1);
+height_data = cell(N,1);
+% % % 
+fig_fn{1} = '1a_1.png';
+Q{1} = [0.5, 0; 0, 0.0];
+R{1} = 01;
+% % %
+fig_fn{2} = '1a_2.png';
+Q{2} = [0.5, 0; 0, 0.5];
+R{2} = 01;
+% % %
+fig_fn{3} = '1a_3.png';
+Q{3} = [0.5, 0; 0, 0.9];
+R{3} = 01;
+% % %
+fig_fn{4} = '1a_4.png';
+Q{4} = [10, 0; 0, 0.5];
+R{4} = 01;
+% % %
+fig_fn{5} = '1a_5.png';
+Q{5} = [0.5, 0; 0, 0.5];
+R{5} = 10;
+% % %
+fig_fn{6} = '1a_6.png';
+Q{6} = [0.5, 0; 0, 0.5];
+R{6} = 3;
+% % %
+fig_fn{7} = '1a_7.png';
+Q{7} = [0.5, 0; 0, 0.5];
+R{7} = 1e-3;
+% % %
+fig_fn{8} = '1a_8.png';
+Q{8} = [0.5, 10; 10, 0.5];
+R{8} = 1;
+
+
+for i = 1:N
+   height_data{i} = run_kalman(vel_samples, Q{i}, R{i}, fig_fn{i});  
+   
 end
 
-% Create plots of the output trajectory
-hold on
-subplot(2,1,1)
-plot(tIndx,filtered_h_el,'r','LineWidth',2.5)
-title('Kalman Filter Results')
-xlabel('Time (sec)');
-ylabel('Altitude (m)');
-legend('Kalman filtered trajectory')
-subplot(2,1,2)
-plot(tIndx,filtered_vel,'g','LineWidth',2.5)
-xlabel('Time (sec)');
-ylabel('Velocity (m/s)');
-hold on
-plot(tIndx,vel_samples)
-legend('Kalman filtered','Noisy Velocity Samples')
+figure(2);
+for i = [1,2,3,4,6,7,8]
+    plot(height_data{i});
+     hold on;
+     pause(1)
+end
+hold off;
+legend(string([1,2,3,4,6,7,8]))
