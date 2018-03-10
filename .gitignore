@@ -16,3 +16,4 @@ HW5/undistorted
 HW5/undistorted_reconstruction.json
 HW5/undistorted_tracks.csv
 *.csv#
+*.access^

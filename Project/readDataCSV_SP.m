@@ -5,9 +5,11 @@ classdef readDataCSV_SP
         fspec = '%s%f%f%f%f%f%f%f%f%f%f%f%f%f%f%s%s%f%f%f%f%f%f%f%f'; % how the data is structured in file
         IMU_data, IMU_time, IMU_delta_time
         GPS_data, GPS_time, GPS_delta_time
+        phoneOrientation
         pose_0 = [0,0,0,0,0,0] % pose when you start reading data
         loc_0 % first GPS reading?
         heading
+        GPS_sampling_rate = 100 %assume that the GPS reads 100 time slower than IMU
     end
     methods
         function obj = readDataCSV_SP(fn)
@@ -16,19 +18,72 @@ classdef readDataCSV_SP
             obj.heading = strsplit(C{1}{1}, ',');
             % Read file into table
             obj.data_table = obj.readCSV(fn, obj.fspec);
+            % % IMU DATA
             % get timestamps
             [obj.IMU_time, obj.IMU_delta_time] = obj.convert2Time(obj.data_table.Timestamp);
-            obj.GPS_time = obj.IMU_time;
-            obj.GPS_delta_time = obj.IMU_delta_time;
             
             obj.IMU_data = [obj.data_table.accelX, obj.data_table.accelY, obj.data_table.accelZ, ...
                             obj.data_table.gyroX_rad_s_, obj.data_table.gyroY_rad_s_, obj.data_table.gyroZ_rad_s_, ];
-            obj.GPS_data = [obj.data_table.Lat, obj.data_table.Long];
+            % % GPS DATA
+            GPS_idx = 1:obj.GPS_sampling_rate:length(obj.IMU_time);
+            obj.GPS_time = obj.IMU_time(GPS_idx);
+            obj.GPS_delta_time = obj.IMU_delta_time(GPS_idx);
+            % Convert Latitude and Longitude to UTM coordinates
+            % then it is in meteres in that local plane
+            [x,y,~] = deg2utm(obj.data_table.Lat(GPS_idx), obj.data_table.Long(GPS_idx));
+            obj.GPS_data = [x,y, obj.data_table.Alt_feet_(GPS_idx)];
+            
+            % Phone Orientation
+            obj.phoneOrientation = [obj.data_table.Pitch_rads_, obj.data_table.Roll_rads_, obj.data_table.Yaw_rads_];
+            
             
             % IMU data can be written out of order so need to reorganize by
             % time
 %             [~,sort_idx] = sort(obj.IMU_data(:,1));
 %             obj.IMU_data = obj.IMU_data(sort_idx, :);
+        end
+        
+        function obj = plotGPSdata(obj)
+            scatter3(obj.GPS_data(:,1), obj.GPS_data(:,2), obj.GPS_data(:,3), 'rx');
+            hold on;
+            scatter3(obj.GPS_data(1,1), obj.GPS_data(1,2), obj.GPS_data(1,3), 'bo');
+            scatter3(obj.GPS_data(end,1), obj.GPS_data(end,2), obj.GPS_data(end,3), 'go');
+        end
+        
+        function obj = plotRotationRates(obj)
+            subplot(3,1,1)
+            plot(obj.IMU_data(:,4), 'rx'); title('rotation rate around x')
+            subplot(3,1,2)
+            plot(obj.IMU_data(:,5), 'rx'); title('rotation rate around y')
+            subplot(3,1,3)
+            plot(obj.IMU_data(:,6), 'rx'); title('rotation rate around z')
+        end
+        
+        function obj = plotRotation(obj)
+            % from phone values
+            phi_gt = obj.data_table.Pitch_rads_;
+            theta_gt = obj.data_table.Roll_rads_;
+            psi_gt = obj.data_table.Yaw_rads_;
+            % calulated values
+            phi = cumsum(obj.IMU_data(1:end-1,4) .* obj.IMU_delta_time) + phi_gt(1);
+            theta = cumsum(obj.IMU_data(1:end-1,5) .* obj.IMU_delta_time) + theta_gt(1);
+            psi = cumsum(obj.IMU_data(1:end-1,6) .* obj.IMU_delta_time) + psi_gt(1);
+            subplot(3,1,1)
+            plot(phi, 'rx'); title('pitch')
+            hold on
+            plot(phi_gt, 'bo');
+            hold off
+            legend('calculated', 'phone')
+            subplot(3,1,2)
+            plot(theta, 'rx'); title('roll')
+            hold on
+            plot(theta_gt, 'bo');
+            hold off
+            subplot(3,1,3)
+            plot(psi, 'rx'); title('yaw')
+            hold on
+            plot(psi_gt, 'bo');
+            hold off;
         end
     end
     
