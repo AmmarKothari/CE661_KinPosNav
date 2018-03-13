@@ -30,36 +30,33 @@ y_all = zeros(imu_total_meas-1,1);
 z_all = zeros(imu_total_meas-1,1);
 
 IGPS = IntegrateBetweenGPS();
-x = data.GPS_data(1,1);
-y = data.GPS_data(1,2);
-z = data.GPS_data(1,3);
+DR = IntegrateBetweenGPS();  % does not use updates from GPS
 
 i_gps = 1;
+gps_update_idx = [];
 for i_imu =1:imu_total_meas-1
     % check GPS time if it is less than IMU time, then get that value
     if data.GPS_time(i_gps) <  data.IMU_time(i_imu)
         disp('Updating with GPS Location')
-        x = data.GPS_data(i_gps,1);
-        y = data.GPS_data(i_gps,2);
-        z = data.GPS_data(i_gps,3);
+        IGPS = IGPS.updateGPS(data.GPS_data(i_gps,:));
+        if i_gps == 1 % get the first GPS reading then dead reckon
+            DR = DR.updateGPS(data.GPS_data(i_gps,:));
+        end
+        gps_update_idx = [gps_update_idx; i_imu];
         i_gps = i_gps + 1;
-    else %move forward with IMU data
+    elseif i_gps > 1 % wait for first GPS reading
+        %move forward with IMU data
         disp('Using only IMU data')
         % need to rotate accelerations into current frame
         dt = data.IMU_delta_time(i_imu);
-        R = IGPS.rotationMatrix(data.phoneOrientation(1), data.phoneOrientation(2), data.phoneOrientation(3));
-        a_N = [data.IMU_data(i_imu,1:3), 0] * R';
-        x = x + dt*x_d + 1/2*a_N(1)*dt^2;
-        y = y + dt*y_d + 1/2*a_N(2)*dt^2;
-        z = z + dt*z_d + 1/2*a_N(3)*dt^2;
-        x_d = x_d + a_N(1)*dt;
-        y_d = y_d + a_N(2)*dt;
-        z_d = z_d + a_N(3)*dt;
+        IGPS = IGPS.updateIMU(data.IMU_data(i_imu,:), data.phoneOrientation, dt);
+        DR = DR.updateIMU(data.IMU_data(i_imu,:), data.phoneOrientation, dt);
+    elseif i_gps == 1
+        continue
     end
     
-    x_all(i_imu) = x;
-    y_all(i_imu) = y;
-    z_all(i_imu) = z;
+    IGPS = IGPS.saveData();
+    DR = DR.saveData();
     
 end
 
@@ -73,9 +70,19 @@ end
 % h = getm(gca);
 % setm(gca,'grid','on','meridianlabel','on','parallellabel','on')
 % plotm(x_all, y_all, 'rx')
-scatter3(x_all, y_all, z_all)
+scatter3(IGPS.x_all(1:end-1), IGPS.y_all(1:end-1), IGPS.z_all(1:end-1), 'bo')
+hold on;
+scatter3(IGPS.x_all(gps_update_idx), IGPS.y_all(gps_update_idx), IGPS.z_all(gps_update_idx), 'g*')
 figure()
-plot(x_all, y_all, 'rx')
+scatter3(DR.x_all(1:end-1),DR.y_all(1:end-1),DR.z_all(1:end-1), 'rx')
+figure()
+hold on
+plot(IGPS.x_all(1:end-1), IGPS.y_all(1:end-1), 'bx')
+plot(IGPS.x_all(gps_update_idx), IGPS.y_all(gps_update_idx), 'ro')
+plot(DR.x_all(1:end-1),DR.y_all(1:end-1), 'g*')
+hold off
+% figure()
+% plot(x_all, y_all, 'rx')
 % xlabel('x')
 % ylabel('y')
 % zlabel('z')
