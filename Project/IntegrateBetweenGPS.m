@@ -35,11 +35,11 @@ classdef IntegrateBetweenGPS
             obj.z_all = [obj.z_all; obj.z];
         end
         
-        function R = rotationMatrix(obj, phi, theta, psi)
+        function R = rotationMatrix(obj, theta, phi, psi)
             Rx = obj.RotX(phi);
             Ry = obj.RotY(theta);
             Rz = obj.RotZ(psi);
-            R = Rz * Ry * Rx;
+            R = Ry * Rx * Rz;
         end
     end
     
@@ -61,7 +61,7 @@ classdef IntegrateBetweenGPS
             Ry = [
             c,		0,	s,	0;
             0,		1,	0,	0;
-            -s,	0,	c,	0;
+            -s, 	0,	c,	0;
             0,		0,	0,	1
             ];
         end

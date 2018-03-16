@@ -4,7 +4,8 @@ classdef KF_GPS_IMU
     % % state: [x,x_d, x_dd, y, y_d, y_dd, z, z_d, z_dd, yaw, yaw_d, pitch,
                 % pitch_d, roll, roll_d]
     properties
-        Phi, H_GPS, H_IMU, , Q, R_GPS, R_IMU
+        Phi, H_GPS, H_IMU, Q, R_GPS, R_IMU
+        x_all, y_all, z_all
         prior = struct('x', 0, 'P', 0);
         post = struct('x', 0, 'P', 0);
         K
@@ -23,10 +24,17 @@ classdef KF_GPS_IMU
         end
         
         function [obj, est, cov, K] = updateGPS(obj, meas)
+            
             obj = obj.predict();
-            obj = obj.GPSKalmanGain();
-            obj = obj.GPSestimate(meas);
-            obj = obj.GPSerrorCovariance();
+            if nargin==2
+                obj = obj.GPSKalmanGain();
+                obj = obj.GPSestimate(meas);
+                obj = obj.GPSerrorCovariance();
+            else
+                % no measurement so just move forward in time
+                obj.post.x = obj.prior.x;
+                obj.post.P = obj.prior.P;
+            end
             est = obj.post.x;
             cov = obj.post.P;
             K = obj.K;
@@ -34,10 +42,15 @@ classdef KF_GPS_IMU
         
         function [obj, est, cov, K] = updateIMU(obj, IMUmeas, phoneOrientation)
             R = obj.rotationMatrix(phoneOrientation(1), phoneOrientation(2), phoneOrientation(3));
-            a_IMU = [IMUmeas(1:3)', 1] * R';
-            g_vec = obj.gravity(R)';
+            % acceleration
+            a_IMU = [IMUmeas(1:3)', 1] * R; % rotate into UTM frame
+            g_vec = obj.gravity()';
             a_N = (a_IMU - g_vec)*9.8; %remove gravity acceleration and convert to m/s^2
-            IMUmeas_rot = [a_N(1:end-1), IMUmeas(4:end)']';
+            
+            % angular velocity
+            w_IMU = [IMUmeas(4:end)', 1] * R;
+            
+            IMUmeas_rot = [a_N(1:end-1), w_IMU(1:end-1)]';
             obj = obj.predict();
             obj = obj.IMUKalmanGain();
             obj = obj.IMUestimate(IMUmeas_rot);
@@ -53,7 +66,7 @@ classdef KF_GPS_IMU
         end
         
         function K = KalmanGain(obj, H, R)
-            K = obj.prior.P*H'*(H*obj.prior.P*H' + R);
+            K = obj.prior.P*H'*inv(H*obj.prior.P*H' + R);
         end
         
         function obj = GPSKalmanGain(obj)
@@ -93,6 +106,12 @@ classdef KF_GPS_IMU
             Ry = obj.RotY(theta);
             Rz = obj.RotZ(psi);
             R = Ry * Rx * Rz;
+        end
+        
+        function obj = saveData(obj)
+            obj.x_all = [obj.x_all; obj.post.x(1)];
+            obj.y_all = [obj.y_all; obj.post.x(4)];
+            obj.z_all = [obj.z_all; obj.post.x(7)];
         end
     end
     methods (Static)
@@ -201,10 +220,8 @@ classdef KF_GPS_IMU
             ];
         end
         
-        function g_vec = gravity(R)
-            %calculates gravity in new frame
-            % is the gravity direction correct?
-            g_vec = R * [0,0, -1, 1]';
+        function g_vec = gravity()
+            g_vec = [0,0, -1, 1]';
         end
         
     end

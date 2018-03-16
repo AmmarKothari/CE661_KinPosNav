@@ -33,7 +33,7 @@ classdef kalman_traj
         end
         
         function obj = KalmanGain(obj)
-            obj.K = obj.prior.P*obj.H'*(obj.H*obj.prior.P*obj.H' + obj.R);
+            obj.K = obj.prior.P*obj.H'*inv(obj.H*obj.prior.P*obj.H' + obj.R);
         end
         
         function obj = estimate(obj, meas)

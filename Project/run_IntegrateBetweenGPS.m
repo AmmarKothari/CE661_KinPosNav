@@ -14,7 +14,7 @@ dataFile = strcat('mlt_20180307_172737_182.csv');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % load(dataFile);    % Contains the noisy samples of vertical velocity
-data = readDataCSV_SP(dataFile);
+% data = readDataCSV_SP(dataFile);
 
 % run forward through data
 imu_total_meas = size(data.IMU_data,1); % total measurements in file
@@ -26,9 +26,11 @@ z0 = data.GPS_data(1,3);
 x_d = 0; y_d = 0; z_d = 0;
 x_dd = 0; y_dd = 0; z_dd = 0;
 
+
 x_all = zeros(imu_total_meas-1,1);
 y_all = zeros(imu_total_meas-1,1);
 z_all = zeros(imu_total_meas-1,1);
+dt_all = zeros(imu_total_meas-1,1);
 
 IGPS = IntegrateBetweenGPS();
 DR = IntegrateBetweenGPS();  % does not use updates from GPS
@@ -38,7 +40,7 @@ gps_update_idx = [];
 for i_imu =1:imu_total_meas-1
 % for i_imu = 1:1000
     % check GPS time if it is less than IMU time, then get that value
-    if data.GPS_time(i_gps) <  data.IMU_time(i_imu)
+    if i_gps < gps_total_meas && data.GPS_time(i_gps) <  data.IMU_time(i_imu)
 %         disp('Updating with GPS Location')
         IGPS = IGPS.updateGPS(data.GPS_data(i_gps,:));
         if i_gps == 1 % get the first GPS reading then dead reckon
@@ -51,6 +53,7 @@ for i_imu =1:imu_total_meas-1
 %         disp('Using only IMU data')
         % need to rotate accelerations into current frame
         dt = data.IMU_delta_time(i_imu);
+        dt_all(i_imu) = dt;
         IGPS = IGPS.updateIMU(data.IMU_data(i_imu,:), data.phoneOrientation, dt);
         DR = DR.updateIMU(data.IMU_data(i_imu,:), data.phoneOrientation, dt);
     elseif i_gps == 1
@@ -105,36 +108,42 @@ end
 
 % %  % % plot motion in each dimension % %  % % 
 pts = 10;
-t_steps = (1:length(IGPS.x_all(1:pts:end-1)))*dt;
+% t_steps = (1:length(IGPS.x_all(1:pts:end-1)))*dt;
+t_steps_IMU = data.IMU_time(1:pts:end-1,1)-data.IMU_time(1);
+t_step_GPS = data.GPS_time(1:end-1,1)-data.GPS_time(1);
 % t_steps = data.IMU_time(1:pts:end-1);
 % Just the Path
-figure('Name', 'Integrate - Filter Path Only')
+figure('Name', 'Integrate - Filter Path Only', 'units','normalized','outerposition',[0 0 1 1])
 subplot(3,1,1)
-plot(t_steps, IGPS.x_all(1:pts:end-1), 'rx', data.GPS_time(1:pts:end-1,1)-data.GPS_time(1), data.GPS_data(1:pts:end-1,1), 'g^')
+plot(t_steps_IMU, IGPS.x_all(1:pts:end-1), 'r',t_step_GPS , data.GPS_data(1:end-1,1), 'g^')
 xlabel('Time(s)'); ylabel('North(m)');
-legend('Filtered', 'GPS')
+legend('Integrated', 'GPS')
+title('Integrating Between GPS Readings');
 % East
 subplot(3,1,2)
-plot(t_steps, IGPS.y_all(1:pts:end-1), 'rx')
+plot(t_steps_IMU, IGPS.y_all(1:pts:end-1), 'r',t_step_GPS , data.GPS_data(1:end-1,2), 'g^')
 xlabel('Time(s)'); ylabel('East(m)');
 % Down
 subplot(3,1,3)
-plot(t_steps, IGPS.z_all(1:pts:end-1), 'rx')
+plot(t_steps_IMU, IGPS.z_all(1:pts:end-1), 'r',t_step_GPS , data.GPS_data(1:end-1,3), 'g^')
 xlabel('Time(s)'); ylabel('Down(m)');
+saveas(gcf, 'IntegratePath.png');
 
 % Dead Reckoning
-figure('Name', 'Integrate - Compare to Dead Reckoning')
+figure('Name', 'Integrate - Compare to Dead Reckoning', 'units','normalized','outerposition',[0 0 1 1])
 % North
 subplot(3,1,1)
-plot(t_steps, IGPS.x_all(1:pts:end-1), 'rx', t_steps, DR.x_all(1:pts:end-1), 'bo')
+plot(t_steps_IMU, DR.x_all(1:pts:end-1), 'b', t_step_GPS , data.GPS_data(1:end-1,1), 'g^')
 xlabel('Time(s)'); ylabel('North(m)');
-legend('Filtered', 'Dead Reckoning')
+legend('Dead Reckoning', 'GPS')
+title('Dead Reckoning with IMU')
 % East
 subplot(3,1,2)
-plot(t_steps, IGPS.y_all(1:pts:end-1), 'rx', t_steps, DR.y_all(1:pts:end-1), 'bo')
+plot(t_steps_IMU, DR.y_all(1:pts:end-1), 'b', t_step_GPS , data.GPS_data(1:end-1,2), 'g^')
 xlabel('Time(s)'); ylabel('East(m)');
 % Down
 subplot(3,1,3)
-plot(t_steps, IGPS.z_all(1:pts:end-1), 'rx', t_steps, DR.z_all(1:pts:end-1), 'bo')
+plot(t_steps_IMU, DR.z_all(1:pts:end-1), 'b', t_step_GPS , data.GPS_data(1:end-1,3), 'g^')
 xlabel('Time(s)'); ylabel('Down(m)');
+saveas(gcf, 'DeadReckoning.png');
 
