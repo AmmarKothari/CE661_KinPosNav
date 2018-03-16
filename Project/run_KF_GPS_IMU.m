@@ -15,7 +15,7 @@ dataFile = strcat('mlt_20180307_172737_182.csv');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % load(dataFile);    % Contains the noisy samples of vertical velocity
-% data = readDataCSV_SP(dataFile);
+data = readDataCSV_SP(dataFile);
 
 % Now apply the Kalman filter
 % state is [x,x_d, x_dd, y, y_d, y_dd, z, z_d, z_dd, roll, roll_d, pitch,
@@ -120,11 +120,10 @@ end
 
 
 pts = 10;
-% t_steps = (1:length(IGPS.x_all(1:pts:end-1)))*dt;
-% t_steps_IMU = data.IMU_time(1:pts:end-1,1)-data.IMU_time(1);
+GPS=GPS.zeroStart(); KF=KF.zeroStart(); GPS_t=GPS_t.zeroStart()
 t_step_IMU = data.IMU_time(1:pts:length(IMU.x_all),1)-data.IMU_time(1);
 t_step_GPS = data.GPS_time(1:end-1,1)-data.GPS_time(1);
-% t_steps = data.IMU_time(1:pts:end-1);
+
 
 % KF over GPS
 figure('Name', 'KF over GPS', 'units','normalized','outerposition',[0 0 1 1])

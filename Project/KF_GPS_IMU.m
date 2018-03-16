@@ -108,6 +108,11 @@ classdef KF_GPS_IMU
             R = Ry * Rx * Rz;
         end
         
+        function obj = zeroStart(obj)
+            obj.x_all = obj.x_all - obj.x_all(1);
+            obj.y_all = obj.y_all - obj.y_all(1);
+            obj.z_all = obj.z_all - obj.z_all(1);
+        end
         function obj = saveData(obj)
             obj.x_all = [obj.x_all; obj.post.x(1)];
             obj.y_all = [obj.y_all; obj.post.x(4)];
