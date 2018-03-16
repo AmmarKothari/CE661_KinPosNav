@@ -18,8 +18,8 @@ classdef IntegrateBetweenGPS
         
         function obj = updateIMU(obj, IMUmeas, phoneOrientation, dt)
             R = obj.rotationMatrix(phoneOrientation(1), phoneOrientation(2), phoneOrientation(3));
-            a_IMU = [IMUmeas(1:3), 1] * R';
-            g_vec = obj.gravity(R)';
+            a_IMU = [IMUmeas(1:3), 1] * R;
+            g_vec = obj.gravity()';
             a_N = (a_IMU - g_vec)*9.8; %remove gravity acceleration and convert to m/s^2
             obj.x = obj.x + dt*obj.x_d + 1/2*a_N(1)*dt^2;
             obj.y = obj.y + dt*obj.y_d + 1/2*a_N(2)*dt^2;
@@ -86,10 +86,8 @@ classdef IntegrateBetweenGPS
             ];
         end
         
-        function g_vec = gravity(R)
-            %calculates gravity in new frame
-            % is the gravity direction correct?
-            g_vec = R * [0,0, -1, 1]';
+        function g_vec = gravity()
+            g_vec = [0,0, -1, 1]';
         end
             
     end
