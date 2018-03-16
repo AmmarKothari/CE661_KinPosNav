@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% apply_kalman
+% run_KF_6D_IMU
 %
 % Applies a Kalman filter to samples from cellphone data
 % Data was recorded with Sensor Play (Iphone) and AndroSensor (Android)

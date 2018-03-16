@@ -1,6 +1,7 @@
 classdef readDataCSV_SP
     % read data in from SensorPlay app (IPhone)
     properties
+        fn
         all_data, data_table
         fspec = '%s%f%f%f%f%f%f%f%f%f%f%f%f%f%f%s%s%f%f%f%f%f%f%f%f'; % how the data is structured in file
         IMU_data, IMU_time, IMU_delta_time
@@ -13,6 +14,7 @@ classdef readDataCSV_SP
     end
     methods
         function obj = readDataCSV_SP(fn)
+            obj.fn = fn;
             fid = fopen(fn, 'r');
             C = textscan(fid, '%s', 1);
             obj.heading = strsplit(C{1}{1}, ',');
@@ -28,6 +30,8 @@ classdef readDataCSV_SP
             GPS_idx = 1:obj.GPS_sampling_rate:length(obj.IMU_time);
             obj.GPS_time = obj.IMU_time(GPS_idx);
             obj.GPS_delta_time = obj.IMU_delta_time(GPS_idx);
+            obj.data_table.Lat = obj.fixNaNs(obj.data_table.Lat);
+            obj.data_table.Long = obj.fixNaNs(obj.data_table.Long);
             % Convert Latitude and Longitude to UTM coordinates
             % then it is in meteres in that local plane
             [x,y,~] = deg2utm(obj.data_table.Lat(GPS_idx), obj.data_table.Long(GPS_idx));
@@ -36,11 +40,6 @@ classdef readDataCSV_SP
             % Phone Orientation
             obj.phoneOrientation = [obj.data_table.Pitch_rads_, obj.data_table.Roll_rads_, obj.data_table.Yaw_rads_];
             
-            
-            % IMU data can be written out of order so need to reorganize by
-            % time
-%             [~,sort_idx] = sort(obj.IMU_data(:,1));
-%             obj.IMU_data = obj.IMU_data(sort_idx, :);
         end
         
         function obj = plotGPSdata(obj)
@@ -69,21 +68,39 @@ classdef readDataCSV_SP
             theta = cumsum(obj.IMU_data(1:end-1,5) .* obj.IMU_delta_time) + theta_gt(1);
             psi = cumsum(obj.IMU_data(1:end-1,6) .* obj.IMU_delta_time) + psi_gt(1);
             subplot(3,1,1)
-            plot(phi, 'rx'); title('pitch')
+            plot(phi, 'rx'); 
+            title('pitch')
             hold on
             plot(phi_gt, 'bo');
             hold off
             legend('calculated', 'phone')
             subplot(3,1,2)
-            plot(theta, 'rx'); title('roll')
+            plot(theta, 'rx');
+            title('roll')
             hold on
             plot(theta_gt, 'bo');
             hold off
             subplot(3,1,3)
-            plot(psi, 'rx'); title('yaw')
+            plot(psi, 'rx'); 
+            title('yaw')
             hold on
             plot(psi_gt, 'bo');
             hold off;
+        end
+        
+        function obj = plotMagnetometer(obj)
+            mag_x = obj.data_table.magX___T_;
+            mag_y = obj.data_table.magY___T_;
+            mag_z = obj.data_table.magZ___T_;
+            subplot(3,1,1)
+            plot(mag_x, 'rx'); 
+            title('MagX')
+            subplot(3,1,2)
+            plot(mag_y, 'rx');
+            title('MagY')
+            subplot(3,1,3)
+            plot(mag_z, 'rx'); 
+            title('MagZ')
         end
     end
     
@@ -106,6 +123,23 @@ classdef readDataCSV_SP
         function delta = delta_time(vec_matlab_time)
             diff_time = diff(vec_matlab_time);
             delta = etime(datevec(diff_time), zeros(1,6));
+        end
+        
+        function D = fixNaNs(D)
+            nan_idxs = find(isnan(D)==1);
+            for i = 1:length(nan_idxs)
+                val = nan;
+                repl_idx = nan_idxs(i);
+                while isnan(val)
+                    if repl_idx + 1 < length(D)
+                        repl_idx = repl_idx + 1;
+                    else
+                        repl_idx = repl_idx - 1;
+                    end
+                    val = D(repl_idx);
+                end
+                D(nan_idxs(i)) = D(repl_idx);
+            end
         end
     end
 end

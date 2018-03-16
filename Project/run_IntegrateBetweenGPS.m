@@ -9,15 +9,16 @@
 % clear all; clf(gcf()); clc;
 
 % Editable filenames %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-dataFile = strcat('mlt-20180307-172723-213_Ammar.csv');
+% dataFile = strcat('mlt-20180307-172723-213_Ammar.csv');
+dataFile = strcat('mlt_20180307_172737_182.csv');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % load(dataFile);    % Contains the noisy samples of vertical velocity
-% data = readDataCSV_SP(dataFile);
+data = readDataCSV_SP(dataFile);
 
 % run forward through data
 imu_total_meas = size(data.IMU_data,1); % total measurements in file
-
+gps_total_meas = size(data.GPS_time,1);
 % initial values
 x0 = data.GPS_data(1,1);
 y0 = data.GPS_data(1,2);
@@ -35,18 +36,19 @@ DR = IntegrateBetweenGPS();  % does not use updates from GPS
 i_gps = 1;
 gps_update_idx = [];
 for i_imu =1:imu_total_meas-1
+% for i_imu = 1:1000
     % check GPS time if it is less than IMU time, then get that value
     if data.GPS_time(i_gps) <  data.IMU_time(i_imu)
-        disp('Updating with GPS Location')
+%         disp('Updating with GPS Location')
         IGPS = IGPS.updateGPS(data.GPS_data(i_gps,:));
         if i_gps == 1 % get the first GPS reading then dead reckon
             DR = DR.updateGPS(data.GPS_data(i_gps,:));
         end
         gps_update_idx = [gps_update_idx; i_imu];
-        i_gps = i_gps + 1;
+        i_gps = min(i_gps + 1, gps_total_meas);
     elseif i_gps > 1 % wait for first GPS reading
         %move forward with IMU data
-        disp('Using only IMU data')
+%         disp('Using only IMU data')
         % need to rotate accelerations into current frame
         dt = data.IMU_delta_time(i_imu);
         IGPS = IGPS.updateIMU(data.IMU_data(i_imu,:), data.phoneOrientation, dt);
@@ -70,17 +72,17 @@ end
 % h = getm(gca);
 % setm(gca,'grid','on','meridianlabel','on','parallellabel','on')
 % plotm(x_all, y_all, 'rx')
-scatter3(IGPS.x_all(1:end-1), IGPS.y_all(1:end-1), IGPS.z_all(1:end-1), 'bo')
-hold on;
-scatter3(IGPS.x_all(gps_update_idx), IGPS.y_all(gps_update_idx), IGPS.z_all(gps_update_idx), 'g*')
-figure()
-scatter3(DR.x_all(1:end-1),DR.y_all(1:end-1),DR.z_all(1:end-1), 'rx')
-figure()
-hold on
-plot(IGPS.x_all(1:end-1), IGPS.y_all(1:end-1), 'bx')
-plot(IGPS.x_all(gps_update_idx), IGPS.y_all(gps_update_idx), 'ro')
-plot(DR.x_all(1:end-1),DR.y_all(1:end-1), 'g*')
-hold off
+% scatter3(IGPS.x_all(1:end-1), IGPS.y_all(1:end-1), IGPS.z_all(1:end-1), 'bo')
+% hold on;
+% scatter3(IGPS.x_all(gps_update_idx), IGPS.y_all(gps_update_idx), IGPS.z_all(gps_update_idx), 'g*')
+% figure()
+% scatter3(DR.x_all(1:end-1),DR.y_all(1:end-1),DR.z_all(1:end-1), 'rx')
+% figure()
+% hold on
+% plot(IGPS.x_all(1:end-1), IGPS.y_all(1:end-1), 'bx')
+% plot(IGPS.x_all(gps_update_idx), IGPS.y_all(gps_update_idx), 'ro')
+% plot(DR.x_all(1:end-1),DR.y_all(1:end-1), 'g*')
+% hold off
 % figure()
 % plot(x_all, y_all, 'rx')
 % xlabel('x')
@@ -100,3 +102,39 @@ hold off
 % hold on
 % plot(tIndx,vel_samples)
 % legend('Kalman filtered','Noisy Velocity Samples')
+
+% %  % % plot motion in each dimension % %  % % 
+pts = 10;
+t_steps = (1:length(IGPS.x_all(1:pts:end-1)))*dt;
+% t_steps = data.IMU_time(1:pts:end-1);
+% Just the Path
+figure('Name', 'Integrate - Filter Path Only')
+subplot(3,1,1)
+plot(t_steps, IGPS.x_all(1:pts:end-1), 'rx', data.GPS_time(1:pts:end-1,1)-data.GPS_time(1), data.GPS_data(1:pts:end-1,1), 'g^')
+xlabel('Time(s)'); ylabel('North(m)');
+legend('Filtered', 'GPS')
+% East
+subplot(3,1,2)
+plot(t_steps, IGPS.y_all(1:pts:end-1), 'rx')
+xlabel('Time(s)'); ylabel('East(m)');
+% Down
+subplot(3,1,3)
+plot(t_steps, IGPS.z_all(1:pts:end-1), 'rx')
+xlabel('Time(s)'); ylabel('Down(m)');
+
+% Dead Reckoning
+figure('Name', 'Integrate - Compare to Dead Reckoning')
+% North
+subplot(3,1,1)
+plot(t_steps, IGPS.x_all(1:pts:end-1), 'rx', t_steps, DR.x_all(1:pts:end-1), 'bo')
+xlabel('Time(s)'); ylabel('North(m)');
+legend('Filtered', 'Dead Reckoning')
+% East
+subplot(3,1,2)
+plot(t_steps, IGPS.y_all(1:pts:end-1), 'rx', t_steps, DR.y_all(1:pts:end-1), 'bo')
+xlabel('Time(s)'); ylabel('East(m)');
+% Down
+subplot(3,1,3)
+plot(t_steps, IGPS.z_all(1:pts:end-1), 'rx', t_steps, DR.z_all(1:pts:end-1), 'bo')
+xlabel('Time(s)'); ylabel('Down(m)');
+

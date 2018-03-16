@@ -44,8 +44,6 @@ classdef IntegrateBetweenGPS
     end
     
     methods (Static)
-        
-
         function Rx = RotX(gamma)
             s = sin(gamma);
             c = cos(gamma);
