@@ -42,6 +42,11 @@ classdef readDataCSV_SP
             
         end
         
+        function obj = zeroStart(obj)
+            obj.GPS_data = obj.GPS_data - obj.GPS_data(1,:);
+        end
+        
+        
         function obj = plotGPSdata(obj)
             scatter3(obj.GPS_data(:,1), obj.GPS_data(:,2), obj.GPS_data(:,3), 'rx');
             hold on;
@@ -56,6 +61,25 @@ classdef readDataCSV_SP
             plot(obj.IMU_data(:,5), 'rx'); title('rotation rate around y')
             subplot(3,1,3)
             plot(obj.IMU_data(:,6), 'rx'); title('rotation rate around z')
+        end
+        
+        function obj = plotPhoneRotation(obj)
+            % from phone values
+            phi_gt = obj.data_table.Pitch_rads_;
+            theta_gt = obj.data_table.Roll_rads_;
+            psi_gt = obj.data_table.Yaw_rads_;
+            subplot(3,1,1)
+            plot(phi_gt, 'rx');
+            ylim([-pi/2, pi/2])
+            title('pitch')
+            subplot(3,1,2)
+            plot(theta_gt, 'rx');
+            ylim([-pi, pi])
+            title('roll')
+            subplot(3,1,3)
+            plot(psi_gt, 'rx');
+            ylim([-pi, pi]) 
+            title('yaw')
         end
         
         function obj = plotRotation(obj)

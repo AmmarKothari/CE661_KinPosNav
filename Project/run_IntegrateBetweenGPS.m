@@ -9,12 +9,13 @@
 % clear all; clf(gcf()); clc;
 
 % Editable filenames %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% dataFile = strcat('mlt-20180307-172723-213_Ammar.csv');
-dataFile = strcat('mlt_20180307_172737_182.csv');
+dataFile = strcat('mlt-20180307-172723-213_Ammar.csv');
+% dataFile = strcat('mlt_20180307_172737_182.csv');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % load(dataFile);    % Contains the noisy samples of vertical velocity
-% data = readDataCSV_SP(dataFile);
+data = readDataCSV_SP(dataFile);
+data = data.zeroStart();
 
 % run forward through data
 imu_total_meas = size(data.IMU_data,1); % total measurements in file
@@ -108,14 +109,12 @@ end
 
 % %  % % plot motion in each dimension % %  % % 
 pts = 10;
-% t_steps = (1:length(IGPS.x_all(1:pts:end-1)))*dt;
-t_steps_IMU = data.IMU_time(1:pts:end-1,1)-data.IMU_time(1);
+t_steps_IMU = data.IMU_time(1:pts:end-pts,1)-data.IMU_time(1);
 t_step_GPS = data.GPS_time(1:end-1,1)-data.GPS_time(1);
-% t_steps = data.IMU_time(1:pts:end-1);
 % Just the Path
 figure('Name', 'Integrate - Filter Path Only', 'units','normalized','outerposition',[0 0 1 1])
 subplot(3,1,1)
-plot(t_steps_IMU, IGPS.x_all(1:pts:end-1), 'r',t_step_GPS , data.GPS_data(1:end-1,1), 'g^')
+plot(t_steps_IMU, IGPS.x_all(1:pts:end), 'r',t_step_GPS , data.GPS_data(1:end-1,1), 'g^')
 xlabel('Time(s)'); ylabel('North(m)');
 legend('Integrated', 'GPS')
 title('Integrating Between GPS Readings');

@@ -41,16 +41,17 @@ classdef KF_GPS_IMU
         end
         
         function [obj, est, cov, K] = updateIMU(obj, IMUmeas, phoneOrientation)
-            R = obj.rotationMatrix(phoneOrientation(1), phoneOrientation(2), phoneOrientation(3));
+            R_NED_to_Phone = obj.rotationMatrix(phoneOrientation(1), phoneOrientation(2), phoneOrientation(3));
+            R_Phone_to_NED = R_NED_to_Phone';
             % acceleration
-            a_IMU = [IMUmeas(1:3)', 1] * R; % rotate into UTM frame
-            g_vec = obj.gravity()';
+            a_IMU = reshape(R_Phone_to_NED * [IMUmeas(1:3)', 1]', [4,1]); % rotate into UTM frame
+            g_vec = reshape(obj.gravity(),size(a_IMU));
             a_N = (a_IMU - g_vec)*9.8; %remove gravity acceleration and convert to m/s^2
             
             % angular velocity
-            w_IMU = [IMUmeas(4:end)', 1] * R;
+            w_IMU = R_Phone_to_NED * [IMUmeas(4:end)', 1]';
             
-            IMUmeas_rot = [a_N(1:end-1), w_IMU(1:end-1)]';
+            IMUmeas_rot = [a_N(1:end-1); w_IMU(1:end-1)];
             obj = obj.predict();
             obj = obj.IMUKalmanGain();
             obj = obj.IMUestimate(IMUmeas_rot);
@@ -101,7 +102,11 @@ classdef KF_GPS_IMU
             obj.post.P = obj.errorCovariance(obj.H_IMU);
         end
         
-        function R = rotationMatrix(obj, phi, theta, psi)
+        function R = rotationMatrix(obj, theta, phi, psi)
+%             Rx = obj.RotX(phi);
+%             Ry = obj.RotY(theta);
+%             Rz = obj.RotZ(psi);
+%             R = Ry * Rx * Rz;
             Rx = obj.RotX(phi);
             Ry = obj.RotY(theta);
             Rz = obj.RotZ(psi);

@@ -9,14 +9,14 @@
 % clear all; clf(gcf()); clc;
 
 % Editable filenames %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% dataFile = strcat('mlt-20180307-172723-213_Ammar.csv');
-% dataFile = strcat('mlt-20180307-173146-408_Ammar.csv');
-dataFile = strcat('mlt_20180307_172737_182.csv');
+dataFile = strcat('mlt-20180307-172723-213_Ammar.csv'); %North bound
+% dataFile = strcat('mlt-20180307-173146-408_Ammar.csv'); % South Bound
+% dataFile = strcat('mlt_20180307_172737_182.csv');
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % load(dataFile);    % Contains the noisy samples of vertical velocity
 data = readDataCSV_SP(dataFile);
-
+data = data.zeroStart();
 % Now apply the Kalman filter
 % state is [x,x_d, x_dd, y, y_d, y_dd, z, z_d, z_dd, roll, roll_d, pitch,
 % pitch_d, yaw, yaw_d]'
@@ -120,7 +120,8 @@ end
 
 
 pts = 10;
-GPS=GPS.zeroStart(); KF=KF.zeroStart(); GPS_t=GPS_t.zeroStart()
+% GPS=GPS.zeroStart(); KF=KF.zeroStart(); GPS_t=GPS_t.zeroStart();
+% data = data.zeroStart();
 t_step_IMU = data.IMU_time(1:pts:length(IMU.x_all),1)-data.IMU_time(1);
 t_step_GPS = data.GPS_time(1:end-1,1)-data.GPS_time(1);
 

@@ -1,6 +1,6 @@
 % % % Ammar's Phone % % % 
 stationary = readDataCSV_SP('mlt-20180315-172636-9s_stationary.csv');
-stationary.plotRotation();
+stationary.plotPhoneRotation();
 saveas(gcf, 'stationary.png');
 stationary.plotMagnetometer();
 saveas(gcf, 'stationary_magnetometer.png');
@@ -23,4 +23,7 @@ saveas(gcf, 'yaw_magnetometer.png');
 magnet = readDataCSV_SP('mlt-20180315-180611-13s_magnet.csv');
 magnet.plotMagnetometer();
 saveas(gcf, 'magnet.png');
+magnet.plotPhoneRotation();
+saveas(gcf, 'magnet_rotation.png');
+close all
 % % % % % % % % % % % % % % % % % % % %
