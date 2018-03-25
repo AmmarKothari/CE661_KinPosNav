@@ -5,7 +5,7 @@ classdef KF_GPS_IMU
                 % pitch_d, roll, roll_d]
     properties
         Phi, H_GPS, H_IMU, Q, R_GPS, R_IMU
-        x_all, y_all, z_all
+        x_all, y_all, z_all, t_all
         prior = struct('x', 0, 'P', 0);
         post = struct('x', 0, 'P', 0);
         K
@@ -118,7 +118,10 @@ classdef KF_GPS_IMU
             obj.y_all = obj.y_all - obj.y_all(1);
             obj.z_all = obj.z_all - obj.z_all(1);
         end
-        function obj = saveData(obj)
+        function obj = saveData(obj, t)
+            if nargin == 2 %im too lazy to change old code
+                obj.t_all = [obj.t_all; t];
+            end
             obj.x_all = [obj.x_all; obj.post.x(1)];
             obj.y_all = [obj.y_all; obj.post.x(4)];
             obj.z_all = [obj.z_all; obj.post.x(7)];
@@ -156,7 +159,6 @@ classdef KF_GPS_IMU
             end
         end
         
-        
         function H = IMUstateMeasurementTransition()
             % returns matrix
             % assume 15 dimension state and 6 Dimension measurement
@@ -186,7 +188,6 @@ classdef KF_GPS_IMU
                 x0(3*(i-1)+1) = GPSmeas(i);
             end
         end
-        
         
         function Rx = RotX(gamma)
             s = sin(gamma);
