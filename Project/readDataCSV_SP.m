@@ -73,6 +73,7 @@ classdef readDataCSV_SP
                 obj.i_imu = obj.i_imu+1;
             end
         end
+        
         function [obj, GPSreading, GPSt, GPSdt] = querryGPS(obj, t)
             % see if another measurement is available based on time
             GPSreading = nan;
@@ -145,26 +146,37 @@ classdef readDataCSV_SP
             theta_gt = obj.data_table.Roll_rads_;
             psi_gt = obj.data_table.Yaw_rads_;
             % calulated values
-%             theta = cumsum(obj.IMU_data(1:end-1,5) .* obj.IMU_delta_time) + theta_gt(1);
+            % mag + acc values
             theta = atan2(-obj.IMU_data(1:end, 1),obj.IMU_data(1:end, 2));
-            theta = obj.wrap(theta, -pi, pi);
-%             phi = cumsum(obj.IMU_data(1:end-1,4) .* obj.IMU_delta_time) + phi_gt(1);
             phi = atan2(obj.IMU_data(1:end, 2),-obj.IMU_data(1:end, 1).*sin(theta) + obj.IMU_data(1:end, 3).*cos(theta));
-%             phi = obj.wrap(phi, -pi, pi);
-%             psi = cumsum(obj.IMU_data(1:end-1,6) .* obj.IMU_delta_time) + psi_gt(1);
-            Rx = @(x) [1, 0, 0; 0, cos(x), sin(x); 0, -sin(x), cos(x)];
+            Rx = @(x) [1, 0, 0; 0, cos(x), -sin(x); 0, sin(x), cos(x)];
             Ry = @(x) [cos(x), 0, -sin(x); 0, 1, 0; sin(x), 0, cos(x)];
             mag_rot = [];
             for i = 1:length(theta)
                 mag_rot = [mag_rot, Rx(-phi(i)) * Ry(-theta(i)) * obj.Mag_data(i,:)'];
             end
             psi = atan2(mag_rot(1,:), mag_rot(2,:));
-%             psi = obj.wrap(psi, -pi, pi);
+            thetad_magacc = diff(theta)./obj.IMU_delta_time;
+            phid_magacc = diff(phi)./obj.IMU_delta_time;
+            psid_magacc = diff(psi)./obj.IMU_delta_time;
+            theta_magacc = cumsum(thetad_magacc .* obj.IMU_delta_time) + theta_gt(1);
+            phi_magacc = cumsum(phid_magacc .* obj.IMU_delta_time) + phi_gt(1);
+            psi_magacc = cumsum(psid_magacc .* obj.IMU_delta_time) + psi_gt(1);
+            
+            % integrated gyroscope values
+            theta_gyro = cumsum(obj.IMU_data(1:end-1,5) .* obj.IMU_delta_time) + theta_gt(1);
+            theta_gyro = obj.wrap(theta_gyro, -pi, pi);
+            phi_gyro = cumsum(obj.IMU_data(1:end-1,4) .* obj.IMU_delta_time) + phi_gt(1);
+            phi_gyro = obj.wrap(phi_gyro, -pi, pi);
+            psi_gyro = cumsum(obj.IMU_data(1:end-1,6) .* obj.IMU_delta_time) + psi_gt(1);
+            psi_gyro = obj.wrap(psi_gyro, -pi, pi);
+
             subplot(3,1,1)
-            plot(phi, 'rx'); 
+            plot(phi_magacc, 'rx'); 
             title('pitch \phi')
             hold on
             plot(phi_gt, 'bo');
+            plot(phi_gyro, 'g^');
             hold off
             legend('calculated', 'phone')
             subplot(3,1,2)

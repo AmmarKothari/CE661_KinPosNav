@@ -1,17 +1,18 @@
-classdef KF_GPS_IMU
-    % this class is a kalman filter using the GPS and IMU
+classdef KF_GPS_IMU_MAG
+    % this class is a kalman filter using the GPS and IMU and Magnetometer
     % GPS and IMU update steps are seperate
     % % state: [x,x_d, x_dd, y, y_d, y_dd, z, z_d, z_dd, yaw, yaw_d, pitch,
                 % pitch_d, roll, roll_d]
     properties
         Phi, H_GPS, H_IMU, Q, R_GPS, R_IMU
         x_all, y_all, z_all, t_all
-        prior = struct('x', 0, 'P', 0);
-        post = struct('x', 0, 'P', 0);
+        phi_all, theta_all, psi_all
+        prior = struct('x', zeros(1,15), 'P', 0);
+        post = struct('x', zeros(1,15), 'P', 0);
         K
     end
     methods
-        function obj = KF_GPS_IMU(Q, H_GPS, H_IMU, R_GPS, R_IMU)
+        function obj = KF_GPS_IMU_MAG(Q, H_GPS, H_IMU, R_GPS, R_IMU)
             obj.H_GPS = H_GPS;
             obj.H_IMU = H_IMU;
             obj.Q = Q;
@@ -40,7 +41,8 @@ classdef KF_GPS_IMU
             K = obj.K;
         end
         
-        function [obj, est, cov, K] = updateIMU(obj, IMUmeas, phoneOrientation)
+        function [obj, est, cov, K] = updateIMU(obj, IMUmeas, MAGmeas)
+            phoneOrientation = [obj.prior.x(10), obj.prior.x(12), obj.prior.x(14)]; % orientation from state
             R_NED_to_Phone = obj.rotationMatrix(phoneOrientation(1), phoneOrientation(2), phoneOrientation(3));
             R_Phone_to_NED = R_NED_to_Phone';
             % acceleration
@@ -48,10 +50,17 @@ classdef KF_GPS_IMU
             g_vec = reshape(obj.gravity(),size(a_IMU));
             a_N = (a_IMU - g_vec)*9.8; %remove gravity acceleration and convert to m/s^2
             
-            % angular velocity
+            % angular velocity -- gyros
             w_IMU = R_Phone_to_NED * [IMUmeas(4:end)', 1]';
             
-            IMUmeas_rot = [a_N(1:end-1); w_IMU(1:end-1)];
+            % angular velocity -- magnetometer
+            theta = atan2(-IMUmeas(1),IMUmeas(2));
+            phi = atan2(IMUmeas(2),-IMUmeas(1).*sin(theta) + IMUmeas(3).*cos(theta));
+            mag_rot = obj.RotX(-phi) * obj.RotY(-theta) * [MAGmeas, 1]';
+            psi = atan2(mag_rot(1), mag_rot(2));
+            w_mag = [phi, theta, psi]';
+            
+            IMUmeas_rot = [a_N(1:end-1); w_IMU(1:end-1); w_mag];
             obj = obj.predict();
             obj = obj.IMUKalmanGain();
             obj = obj.IMUestimate(IMUmeas_rot);
@@ -125,6 +134,9 @@ classdef KF_GPS_IMU
             obj.x_all = [obj.x_all; obj.post.x(1)];
             obj.y_all = [obj.y_all; obj.post.x(4)];
             obj.z_all = [obj.z_all; obj.post.x(7)];
+            obj.phi_all = [obj.phi_all; obj.post.x(10)]; % check states and coordinate system
+            obj.theta_all = [obj.theta_all; obj.post.x(12)];
+            obj.psi_all = [obj.psi_all; obj.post.x(14)];
         end
     end
     methods (Static)
@@ -161,19 +173,25 @@ classdef KF_GPS_IMU
         
         function H = IMUstateMeasurementTransition()
             % returns matrix
-            % assume 15 dimension state and 6 Dimension measurement
-            H = zeros(6,15);
+            % assume 15 dimension state and 9 Dimension measurement
+            H = zeros(9,15);
             c = 1;
-            % translation
+            % IMU
             for i=1:3:7
                 r = i:i+2;
                 H(c,r) = [0,0,1];
                 c=c+1;
             end
-            % rotation
+            % Gyro
             for i=10:2:14
                 r = i:i+1;
                 H(c,r) = [0,1];
+                c=c+1;
+            end
+            % Mag+Acc
+            for i=10:2:14
+                r = i:i+1;
+                H(c,r) = [1,0];
                 c=c+1;
             end
         end
@@ -206,7 +224,7 @@ classdef KF_GPS_IMU
             Ry = [
             c,		0,	s,	0;
             0,		1,	0,	0;
-            -s,	0,	c,	0;
+            -s,     0,	c,	0;
             0,		0,	0,	1
             ];
         end
